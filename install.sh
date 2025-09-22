@@ -10,11 +10,25 @@ if [[ ! -f "$SCRIPT_FILE" ]]; then
   exit 1
 fi
 
+echo "[*] Checking for existing installations..."
+if ps aux | grep -i "system_tray_monitor\|tray.*monitor" | grep -v grep >/dev/null 2>&1; then
+  echo "[!] Found existing monitor process(es). Stopping them..."
+  pkill -f "system_tray_monitor.py" || true
+  sleep 2
+fi
+
 echo "[*] Installing prerequisites..."
 sudo apt-get update -y
 sudo apt-get install -y python3-gi python3-gi-cairo gir1.2-gtk-3.0 gir1.2-appindicator3-0.1 gir1.2-ayatanaappindicator3-0.1 python3-psutil lm-sensors intel-gpu-tools
 
 echo "[*] Enabling sensors (one-time). If temps missing, run: sudo modprobe coretemp"
+
+echo "[*] Cleaning up old autostart files..."
+AUTOSTART_FILE="$HOME/.config/autostart/$APP_NAME.desktop"
+if [[ -f "$AUTOSTART_FILE" ]]; then
+  rm -f "$AUTOSTART_FILE"
+  echo "[✓] Removed old autostart file: $AUTOSTART_FILE"
+fi
 
 SYSTEMD_USER_DIR="$HOME/.config/systemd/user"
 mkdir -p "$SYSTEMD_USER_DIR"
